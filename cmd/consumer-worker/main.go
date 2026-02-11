@@ -2,42 +2,72 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
-	"time"
 
 	// "time"
 
+	"github.com/JacksonDahl2/drone-platform/cmd/shared"
 	"github.com/segmentio/kafka-go"
 )
 
-func main() {
-	// to consome messages
-	topic := "my-topic"
-	partition := 0
+type KafkaConsumer struct {
+	consumer      *kafka.Reader
+	topic         string
+	consumerGroup string
+}
 
-	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:19092", topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
+func NewKafkaConsumer(topic string, consumerGroup string) *KafkaConsumer {
+	cfg := shared.NewKafkaConfig()
+	if topic == "" {
+		topic = cfg.Topic
+	}
+	if consumerGroup == "" {
+		consumerGroup = cfg.ConsumerGroup
 	}
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	batch := conn.ReadBatch(1, 1e6) // fetch 10KB min, 1MB max
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{cfg.Host},
+		Topic: 	topic,
+		GroupID: consumerGroup,
+		MaxBytes: 10e6,
+	})
 
-	b := make([]byte, 10e3) // 10KB max per message
+	return &KafkaConsumer{
+		consumer: r,
+		topic: topic,
+		consumerGroup: consumerGroup,
+	}
+}
+
+func (r *KafkaConsumer) Close() error {
+	return r.consumer.Close()
+}
+
+func (r *KafkaConsumer) Consume() {
+	ctx := context.Background()
+
 	for {
-		n, err := batch.Read(b)
+		m, err := r.consumer.ReadMessage(ctx)
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				log.Printf("shutting down consumer")
+			} else {
+				log.Printf("consumer read error: %v", err)
+			}
 			break
 		}
-		fmt.Println(string(b[:n]))
+		log.Printf("message at offset %d: %s = %s\n", m.Offset, string(m.Key), string(m.Value))
 	}
 
-	if err := batch.Close(); err != nil {
-		log.Fatal("failed to close batch:", err)
-	}
+}
 
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close connection:", err)
-	}
+func main() {
+
+	log.Printf("starting consumer worker...")
+	c := NewKafkaConsumer("", "")
+	c.Consume()
+	defer c.Close()
+	
+
 }

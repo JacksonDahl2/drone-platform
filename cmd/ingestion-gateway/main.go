@@ -1,37 +1,37 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"log"
 	"time"
-
-	"github.com/segmentio/kafka-go"
 )
 
+
+type Server struct {
+	producer *KafkaProducer
+}
+
+func NewServer() *Server {
+	return &Server {
+		producer: NewKafkaProducer(""),
+	}
+}
+
+func (s *Server) produceMessage() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	id := 0
+	for t := range ticker.C {
+		msg := fmt.Sprintf("hello world, msgId =%d, ts =%s", id, t.Format("15:20:20"))
+		s.producer.Produce(msg)
+		id++
+	}
+
+}
+
 func main() {
-	// to produce messages
+	log.Printf("Starting server ... ")
+	s := NewServer()
+	s.produceMessage()
 
-	topic := "my-topic"
-	partition := 0
-
-	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:19092", topic, partition)
-	if err != nil {
-		log.Fatal("Failed to dial leader:", err)
-	}
-
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-
-	_, err = conn.WriteMessages(
-		kafka.Message{Value: []byte("one!")},
-		kafka.Message{Value: []byte("two!")},
-		kafka.Message{Value: []byte("three!")},
-	)
-
-	if err != nil {
-		log.Fatal("Failed to write messages")
-	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("Failed to close writer")
-	}
 }

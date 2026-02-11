@@ -7,6 +7,7 @@ The goal of this project will be to become more familiar with message brokers, a
 1. Use docker compose to spin up redpanda as an easy alternative to kafka. Have a Go consumer and a go producer that will just produce and consume a simple message.
 	1. Producer - _Learning Focus:_ Go syntax, `main()` functions, and importing the `segmentio/kafka-go` library.
 	2. Consumer - _Learning Focus:_ Go routines (concurrency) and `for` loops.
+	https://www.youtube.com/watch?v=mVDdspGv8qE
 2. Build the data highway
 	1.  Go struct that will define the go data
 	2. a small `net/http` server built in go that will accept incoming data - _Learning Focus:_ JSON Marshaling/Unmarshaling and HTTP Handlers.
