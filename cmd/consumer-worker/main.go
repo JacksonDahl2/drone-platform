@@ -27,15 +27,15 @@ func NewKafkaConsumer(topic string, consumerGroup string) *KafkaConsumer {
 	}
 
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{cfg.Host},
-		Topic: 	topic,
-		GroupID: consumerGroup,
+		Brokers:  []string{cfg.Host},
+		Topic:    topic,
+		GroupID:  consumerGroup,
 		MaxBytes: 10e6,
 	})
 
 	return &KafkaConsumer{
-		consumer: r,
-		topic: topic,
+		consumer:      r,
+		topic:         topic,
 		consumerGroup: consumerGroup,
 	}
 }
@@ -68,6 +68,5 @@ func main() {
 	c := NewKafkaConsumer("", "")
 	c.Consume()
 	defer c.Close()
-	
 
 }
