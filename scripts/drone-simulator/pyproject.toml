@@ -1,0 +1,14 @@
+[project]
+name = "drone-simulator"
+version = "0.1.0"
+description = "Drone simulator for my local redpanda ingestion and display engine"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.3.1",
+    "faker>=40.4.0",
+    "httpx>=0.28.1",
+    "ruff>=0.15.0",
+    "tenacity>=9.1.4",
+    "uuid>=1.30",
+]
