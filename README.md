@@ -12,6 +12,7 @@ The goal of this project will be to become more familiar with message brokers, a
 	1.  Go struct that will define the go data
 	2. a small `net/http` server built in go that will accept incoming data - _Learning Focus:_ JSON Marshaling/Unmarshaling and HTTP Handlers.
 	3. Write a python mock script 'drone simulator' that will simulate all the data coming in, make sure it's coming into the consumers terminal
+	3.5 need to spin up a different consumer for each topic
 3. Persistant storage
 	1. save the data so that it can be used later in a timeseriesDb
 	2. Write a SQL schema to create a hypertable -> do I want to use a ORM in this instance?

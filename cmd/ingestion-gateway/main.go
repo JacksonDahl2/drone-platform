@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"log"
 	"net/http"
 )
@@ -14,58 +13,59 @@ func logging(next http.Handler) http.Handler {
 	})
 }
 
-type Server struct {
-	producer *KafkaProducer
-	mux      *http.ServeMux
+// wraps the server to help it recover if there are any panics, so server doesn't crash
+func recovery(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("panic recovered: %v", err)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
-func NewServer(p *KafkaProducer) *Server {
+type Server struct {
+	gpsProducer    *KafkaProducer
+	stateProducer  *KafkaProducer
+	eventsProducer *KafkaProducer
+	mux            *http.ServeMux
+}
+
+const (
+	TopicGPS    = "v1_gps"
+	TopicState  = "v1_state"
+	TopicEvents = "v1_events"
+)
+
+func NewServer() *Server {
 	s := &Server{
-		producer: p,
-		mux:      http.NewServeMux(),
+		gpsProducer:    NewKafkaProducer(TopicGPS),
+		stateProducer:  NewKafkaProducer(TopicState),
+		eventsProducer: NewKafkaProducer(TopicEvents),
+		mux:            http.NewServeMux(),
 	}
 	s.routes()
 	return s
 }
 
-func (s *Server) routes() {
-	s.mux.HandleFunc("GET /health", s.handleHealth)
-	s.mux.HandleFunc("POST /ingest", s.handleIngest) // will be one for now, but expand to different types eventually
+func (s *Server) Close() {
+	_ = s.gpsProducer.Close()
+	_ = s.stateProducer.Close()
+	_ = s.eventsProducer.Close()
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
-func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	log.Printf("healthy")
-
-	w.Write([]byte("Server healthy"))
-	w.WriteHeader(http.StatusOK)
-}
-
-func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	defer r.Body.Close()
-	if err := s.producer.Produce(string(body)); err != nil {
-		http.Error(w, "produce failed", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusAccepted)
-}
-
 func main() {
-	producer := NewKafkaProducer("")
-	defer producer.Close()
-
-	server := NewServer(producer)
+	server := NewServer()
+	defer server.Close()
 
 	log.Print("Server starting on port 3000....")
-	if err := http.ListenAndServe(":3000", logging(server)); err != nil {
+	if err := http.ListenAndServe(":3000", recovery(logging(server))); err != nil {
 		log.Fatal("Server crashed, ", err)
 
 		return
