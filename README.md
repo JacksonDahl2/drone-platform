@@ -46,3 +46,23 @@ drone-platform/
 │   └── k8s/                     # Kubernetes manifests (YAML)
 ├── go.mod                       # Go project dependencies
 └── go.sum                       # Checksums for dependencies
+
+### Database: migrations and generated types
+
+1. Start TimescaleDB:
+   ```bash
+   docker compose up -d timescaledb
+   ```
+
+2. Run migrations (requires [golang-migrate](https://github.com/golang-migrate/migrate#installation) CLI):
+   ```bash
+   migrate -path ./migrations -database "postgres://drone:drone@localhost:5432/drone_platform?sslmode=disable" up
+   ```
+
+3. Generate types (requires [sqlc](https://docs.sqlc.dev/en/latest/overview/install.html) CLI). Ensure `$HOME/go/bin` is on your PATH (or run by full path):
+   ```bash
+   sqlc generate
+   ```
+   Output is written to `internal/platform/db/sqlc/`. No database connection is required. Re-run whenever you change `internal/platform/db/schema/` or `internal/platform/db/queries/`.
+
+**Design:** Time-series tables (gps, state, events) use `(drone_id, time)` as the logical key. No surrogate insert ID is used; append-only telemetry is queried by drone and time range.

@@ -1,0 +1,30 @@
+CREATE TABLE gps (
+    drone_id TEXT NOT NULL,
+    time TIMESTAMPTZ NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    altitude DOUBLE PRECISION NOT NULL,
+    heading DOUBLE PRECISION NOT NULL,
+    pitch DOUBLE PRECISION NOT NULL,
+    roll DOUBLE PRECISION NOT NULL,
+    speed DOUBLE PRECISION NOT NULL,
+    climb_rate DOUBLE PRECISION NOT NULL,
+    angular_rate DOUBLE PRECISION NOT NULL
+);
+
+CREATE TABLE state (
+    drone_id TEXT NOT NULL,
+    time TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL,
+    battery_pct DOUBLE PRECISION NOT NULL,
+    voltage DOUBLE PRECISION NOT NULL,
+    connected BOOLEAN NOT NULL,
+    flight_mode TEXT NOT NULL
+);
+
+CREATE TABLE events (
+    drone_id TEXT NOT NULL,
+    time TIMESTAMPTZ NOT NULL,
+    event_type TEXT NOT NULL,
+    payload JSONB NOT NULL
+);

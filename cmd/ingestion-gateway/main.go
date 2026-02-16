@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 // logs all requests
@@ -64,10 +69,25 @@ func main() {
 	server := NewServer()
 	defer server.Close()
 
-	log.Print("Server starting on port 3000....")
-	if err := http.ListenAndServe(":3000", recovery(logging(server))); err != nil {
-		log.Fatal("Server crashed, ", err)
-
-		return
+	srv := &http.Server{
+		Addr:    ":3000",
+		Handler: recovery(logging(server)),
 	}
+	go func() {
+		log.Print("Server starting on port 3000....")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server: %v", err)
+		}
+	}()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	<-sigCh
+	log.Printf("received shutdown signal, draining...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("server shutdown: %v", err)
+	}
+	log.Printf("ingestion gateway stopped")
 }

@@ -1,0 +1,15 @@
+CREATE TABLE gps (
+    drone_id TEXT NOT NULL,
+    time TIMESTAMPTZ NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    altitude DOUBLE PRECISION NOT NULL,
+    heading DOUBLE PRECISION NOT NULL,
+    pitch DOUBLE PRECISION NOT NULL,
+    roll DOUBLE PRECISION NOT NULL,
+    speed DOUBLE PRECISION NOT NULL,
+    climb_rate DOUBLE PRECISION NOT NULL,
+    angular_rate DOUBLE PRECISION NOT NULL
+);
+
+SELECT create_hypertable('gps', 'time');

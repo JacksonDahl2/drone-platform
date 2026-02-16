@@ -1,9 +1,9 @@
 package models
 
 type GpsInput struct {
-	DroneID     string  `json:"drone_id"`
+	DroneId     string  `json:"drone_id"`
 	Timestamp   string  `json:"timestamp"`
-	Lattitude   float64 `json:"lattitude"`
+	Latitude   float64 `json:"latitude"`
 	Longitude   float64 `json:"longitude"`
 	Altitude    float64 `json:"altitude"`
 	Heading     float64 `json:"heading"`

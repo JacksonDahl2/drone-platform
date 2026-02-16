@@ -4,7 +4,10 @@ go 1.23
 
 toolchain go1.24.12
 
-require github.com/segmentio/kafka-go v0.4.50
+require (
+	github.com/lib/pq v1.11.2
+	github.com/segmentio/kafka-go v0.4.50
+)
 
 require (
 	github.com/klauspost/compress v1.15.9 // indirect

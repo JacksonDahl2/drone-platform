@@ -3,7 +3,25 @@ networks:
     driver: bridge
 
 services:
-  # red panda message broker
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: timescaledb
+    environment:
+      POSTGRES_USER: drone
+      POSTGRES_PASSWORD: drone
+      POSTGRES_DB: drone_platform
+    networks:
+      - drone-net
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drone -d drone_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
     container_name: redpanda
@@ -30,6 +48,21 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  redpanda-init:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: redpanda-init
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        rpk cluster health --api-urls http://redpanda:9644 --wait 10s
+        rpk topic create v1_gps v1_state v1_events --brokers redpanda:9092 || true
+    networks:
+      - drone-net
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: "no"
 
   # web app to view red panda instance
   redpanda-console:
@@ -58,3 +91,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+volumes:
+  timescaledb_data:
