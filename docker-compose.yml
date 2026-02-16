@@ -49,6 +49,21 @@ services:
       retries: 10
       start_period: 30s
 
+  redpanda-init:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: redpanda-init
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        rpk cluster health --api-urls http://redpanda:9644 --wait 10s
+        rpk topic create v1_gps v1_state v1_events --brokers redpanda:9092 || true
+    networks:
+      - drone-net
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: "no"
+
   # web app to view red panda instance
   redpanda-console:
     image: docker.redpanda.com/redpandadata/console:latest

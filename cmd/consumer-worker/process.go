@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 
 	sqlc "github.com/JacksonDahl2/drone-platform/internal/platform/db/sqlc"
@@ -17,14 +18,14 @@ func NewProcessor(db *sql.DB) *Processor {
 	}
 }
 
-func (*Processor) ProcessGps() {
-
+func (*Processor) ProcessGps(ctx context.Context, msg []byte) error {
+	return nil
 }
 
-func (*Processor) ProcessState() {
-
+func (*Processor) ProcessState(ctx context.Context, msg []byte) error {
+	return nil
 }
 
-func (*Processor) ProcessEvent() {
-	return
+func (*Processor) ProcessEvent(ctx context.Context, msg []byte) error{
+	return nil
 }
