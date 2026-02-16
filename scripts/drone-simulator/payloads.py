@@ -17,7 +17,7 @@ class Payload:
         return {
             "drone_id": drone.id,
             "timestamp": self._tick_timestamp(),
-            "lattitude": drone.lat,
+            "latitude": drone.lat,
             "longitude": drone.lon,
             "altitude": drone.alt,
             "heading": drone.heading,
