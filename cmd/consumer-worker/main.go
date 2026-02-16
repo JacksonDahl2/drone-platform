@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log"
+	"os"
 
 	// "time"
 
 	"github.com/JacksonDahl2/drone-platform/cmd/shared"
+	sqlc "github.com/JacksonDahl2/drone-platform/internal/platform/db/sqlc"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -46,6 +49,15 @@ func (r *KafkaConsumer) Close() error {
 
 func (r *KafkaConsumer) Consume() {
 	ctx := context.Background()
+
+	dsn := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	processor := NewProcessor(db)
 
 	for {
 		m, err := r.consumer.ReadMessage(ctx)
