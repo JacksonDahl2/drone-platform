@@ -11,6 +11,25 @@ import (
 	"time"
 )
 
+const getLatestEventsByDrone = `-- name: GetLatestEventsByDrone :one
+SELECT drone_id, time, event_type, payload FROM events
+WHERE drone_id = $1
+ORDER BY time DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLatestEventsByDrone(ctx context.Context, droneID string) (Event, error) {
+	row := q.db.QueryRowContext(ctx, getLatestEventsByDrone, droneID)
+	var i Event
+	err := row.Scan(
+		&i.DroneID,
+		&i.Time,
+		&i.EventType,
+		&i.Payload,
+	)
+	return i, err
+}
+
 const insertEvent = `-- name: InsertEvent :exec
 INSERT INTO events (
     drone_id,
