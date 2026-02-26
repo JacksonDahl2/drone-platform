@@ -7,3 +7,9 @@ INSERT INTO events (
 ) VALUES (
     $1, $2, $3, $4
 );
+
+-- name: GetLatestEventsByDrone :one
+SELECT * FROM events
+WHERE drone_id = $1
+ORDER BY time DESC
+LIMIT 1;

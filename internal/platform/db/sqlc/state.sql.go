@@ -10,6 +10,28 @@ import (
 	"time"
 )
 
+const getLatestStateByDrone = `-- name: GetLatestStateByDrone :one
+SELECT drone_id, time, status, battery_pct, voltage, connected, flight_mode FROM state
+WHERE drone_id = $1
+ORDER BY time DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLatestStateByDrone(ctx context.Context, droneID string) (State, error) {
+	row := q.db.QueryRowContext(ctx, getLatestStateByDrone, droneID)
+	var i State
+	err := row.Scan(
+		&i.DroneID,
+		&i.Time,
+		&i.Status,
+		&i.BatteryPct,
+		&i.Voltage,
+		&i.Connected,
+		&i.FlightMode,
+	)
+	return i, err
+}
+
 const insertState = `-- name: InsertState :exec
 INSERT INTO state (
     drone_id,
